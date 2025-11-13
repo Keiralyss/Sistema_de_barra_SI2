@@ -1,0 +1,36 @@
+Hola Rafa, 
+te mando unas pequeñas consideraciones para la creacion de la base de datos
+
+Supuse que usas MySQL Workbench de oracle, así que para que trabajes en un diseño 
+los cambios y tablas que hagas tendras que exportarlas y guardarlas dentro de esta carpeta
+Además hay que incluirlas en un solo scriptsql que luego hay que inicializarlo en el
+dockercompose asi que me avisas y lo actualizo si quieres, por lo que el codigo seria 
+algo asi:
+
+
+- ./mysql/scriptsdetablas.sql:/docker-entrypoint-initdb.d/init.sql
+
+
+
+
+Exportar el Script SQL
+
+El proceso se llama "Exportación" o "Dump" del esquema de la base de datos:
+
+    Crea las Tablas: Conéctate a tu contenedor MySQL desde Workbench (localhost:3306, usuario user_app) y ejecuta todas tus sentencias CREATE TABLE y CREATE FOREIGN KEY.
+
+    Usa la Herramienta de Exportación: La mayoría de los clientes de MySQL, incluyendo MySQL Workbench, tienen una función de exportación o Backup.
+
+    Genera el Archivo: Elige exportar solo la estructura (esquema) de la base de datos inventario_db (o puedes incluir los datos si insertaste datos de prueba). El programa generará un archivo .sql que contiene todas las sentencias SQL necesarias.
+
+
+Si eliminas tus contenedores y pierdes el volumen, simplemente vuelves a iniciar MySQL con Docker Compose y luego abres ese archivo .sql en Workbench para ejecutar las sentencias y recrear las tablas.
+
+Para conectarse a la base de datos del container de docker y hacer consultas o crear tablas
+estos son los datos que necesitas:
+Connection Name	Inventario Docker (o el que quieras)
+Hostname	127.0.0.1 o localhost
+Port	3306
+Username	user_app
+Password	app_user_password_999
+Default Schema (Opcional)	inventario_db (o el q quieras)

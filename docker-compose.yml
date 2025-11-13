@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. BASE DE DATOS (MySQL)
+  db:
+    image: mysql:8.0 # Usamos una imagen estable y popular
+    container_name: mysql_inventario_db
+    restart: always
+    environment:
+      # VARIABLES CRUCIALES DE LA BASE DE DATOS
+      MYSQL_ROOT_PASSWORD: secure_root_password_999 # ¡Cámbiala por una más segura!
+      MYSQL_DATABASE: inventario_db
+      MYSQL_USER: user_app
+      MYSQL_PASSWORD: app_user_password_999 # ¡Cámbiala por una más segura!
+    ports:
+      - "3306:3306" # Permite acceder a MySQL desde tu máquina host (opcional para desarrollo)
+    volumes:
+      - db_data:/var/lib/mysql # **PERSISTENCIA:** Guarda los datos de MySQL en un volumen de Docker
+
+  # 2. BACKEND (Flask/Python)
+  backend:
+    build:
+      context: ./backend      # Busca el Dockerfile en la carpeta 'backend'
+    container_name: flask_inventario_backend
+    ports:
+      - "5000:5000"           # Acceso a la API en http://localhost:5000
+    environment:
+      # VARIABLES QUE TU CÓDIGO FLASK LEE PARA CONECTARSE A 'db'
+      DATABASE_HOST: db       # CRUCIAL: 'db' es el nombre del servicio MySQL
+      DATABASE_USER: user_app
+      DATABASE_PASSWORD: app_user_password_999
+      DATABASE_NAME: inventario_db
+    depends_on:
+      - db                    # Asegura que MySQL inicie antes que Flask
+    volumes:
+      - ./backend:/app        # Mapea tu código local al contenedor para desarrollo (cambios en tiempo real)
+
+  # 3. FRONTEND (React)
+  frontend:
+    build:
+      context: ./frontend     # Busca el Dockerfile en la carpeta 'frontend'
+    container_name: react_inventario_frontend
+    ports:
+      - "3000:3000"           # Acceso al Front-end en http://localhost:3000
+    stdin_open: true          # Necesario para el servidor de desarrollo de React
+    depends_on:
+      - backend               # Opcional, pero asegura que el backend esté listo para las llamadas API
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules     # Evita que Docker pise tu node_modules local
+
+# Definición del Volumen de Datos para MySQL
+volumes:
+  db_data: {}
