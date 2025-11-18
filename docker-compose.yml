@@ -15,7 +15,7 @@ services:
     ports:
       - "3307:3306" # Permite acceder a MySQL desde tu máquina host (opcional para desarrollo)
     volumes:
-      - db_data:/var/lib/mysql # **PERSISTENCIA:** Guarda los datos de MySQL en un volumen de Docker
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # **PERSISTENCIA:** Guarda los datos de MySQL en un volumen de Docker
 
   # 2. BACKEND (Flask/Python)
   backend:
