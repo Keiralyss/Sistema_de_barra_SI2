@@ -80,3 +80,5 @@ def get_productos():
 if __name__ == '__main__':
     # Esto es solo para uso local fuera de Docker/Gunicorn
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+    
