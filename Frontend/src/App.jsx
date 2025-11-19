@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import ScannerPage from './components/ScannerBar/ScannerPage.jsx'
 import { Routes, Route, useNavigate } from 'react-router-dom'
@@ -19,15 +17,8 @@ function HomePage({ count }) {
 
     return (
         <>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo" />
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo" />
-                </a>
-            </div>
-            <h1>Vite + React</h1>
+
+            <h1>Escanea tu credencial</h1>
 
             <div className="card">
                 <button onClick={handleNavigation}>
@@ -40,7 +31,7 @@ function HomePage({ count }) {
                 </button>
             </div>
             <div className='card'>
-                <p>Edit <code>src/App.jsx</code> SI ESTO SE VE FUNCIONA EL HOTRELOAD</p>
+                <p>Edit <code>src/App.jsx</code> SI ESTO SE VE aL HOTRELOAD</p>
             </div>
 
 
