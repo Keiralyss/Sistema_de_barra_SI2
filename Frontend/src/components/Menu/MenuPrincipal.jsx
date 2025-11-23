@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import './App.css';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import ScannerPage from './components/ScannerBar/ScannerPage.jsx';
-import ScannerQR from './components/ScannerQR/ScannerQR.jsx';
+import ScannerPage from '../ScannerBar/ScannerPage.jsx';
+import ScannerQR from '../ScannerQR/ScannerQR.jsx';
 
 function HomePage({ scannedData, removeScannedItem, updateScannedItem }) {
     const navigate = useNavigate();
