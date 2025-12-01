@@ -1,3 +1,27 @@
+# Este archivo aplica dos patrones de diseño de forma implícita:
+#
+# 1) Patrón Strategy (Estrategia)
+#    Cada función de validación (validar_prestamo, validar_detalle_prestamo,
+#    validar_devolucion, validar_eliminar_prestamo) actúa como una estrategia
+#    independiente que valida un caso distinto según la operación del sistema.
+#    En lugar de crear clases para cada estrategia, aquí se usan funciones,
+#    pero la idea es la misma: elegir dinámicamente qué validación aplicar
+#    según el endpoint que se está ejecutando.
+#
+# 2) Patrón Template Method (Método Plantilla)
+#    Todas las validaciones comparten un paso común: validar_campos(),
+#    que revisa campos obligatorios y estructura. Luego, cada validación
+#    agrega sus reglas específicas (existencia de profesor, equipo prestado,
+#    estado del préstamo, etc.). Esto sigue la lógica del Template Method:
+#    pasos base + pasos particulares por validación.
+#
+# Además, todas las funciones dependen de get_db_connection(), el cual es
+# normalmente implementado con el patrón Singleton para reutilizar una única
+# conexión por request. Este archivo no implementa el Singleton, pero lo utiliza.
+
+#-------------------------------------------------------------------------------------
+
+
 from database import get_db_connection 
 def validar_campos(data, campos_obligatorios):
     """Verifica la presencia y no vaciedad de los campos obligatorios."""

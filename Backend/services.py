@@ -1,3 +1,38 @@
+# Este archivo utiliza los siguientes patrones de diseño de manera implícita:
+#
+# 1) Patrón Factory Method (Creacional, uso indirecto)
+#    Este archivo no crea conexiones a la base de datos por sí mismo, sino que
+#    delega esa tarea a la función get_db_connection() definida en app.py.
+#    Esa función actúa como una “fábrica” que produce objetos de conexión listos
+#    para usar. Services.py solo llama a la fábrica y utiliza el objeto creado.
+#
+# 2) Patrón Repository / DAO (Comportamiento)
+#    Cada función encapsula una operación de consulta hacia la base de datos:
+#      - get_professors_with_loans()
+#      - get_professor_report()
+#    Esto aísla el acceso SQL del resto del sistema. 
+#    Los controladores no conocen consultas SQL; simplemente llaman funciones 
+#    del servicio, lo que es exactamente el rol de un patrón Repository/DAO.
+#
+# 3) Patrón Service Layer (Comportamiento)
+#    Este archivo agrupa la lógica que combina múltiples consultas, filtros y
+#    verificaciones antes de entregar los datos al controlador. 
+#    Ejemplo claro: get_professor_report(), que obtiene primero un profesor,
+#    luego su historial detallado, devolviendo todo estructurado.
+#    Esta organización define una capa de servicio por encima del acceso a datos.
+#
+# 4) Patrón Transaction Script (Comportamiento, leve)
+#    Cada función ejecuta una “unidad” de trabajo completa: abrir conexión,
+#    ejecutar consultas, procesar resultados y cerrar la conexión. 
+#    No hay objetos persistentes ni modelos complejos, solo scripts secuenciales
+#    que resuelven una operación puntual, típico del patrón Transaction Script.
+#
+# Estos patrones combinados permiten que el acceso a datos sea ordenado, aislado,
+# reutilizable y fácil de integrar con los controladores del sistema.
+
+#---------------------------------------------------------------------------------
+
+
 # backend/services.py
 from app import get_db_connection
 
