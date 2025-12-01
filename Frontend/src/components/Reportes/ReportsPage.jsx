@@ -1,37 +1,32 @@
 // frontend/src/components/reports/ReportsPage.jsx
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from "react-icons/fa";
+import React, { useEffect, useState, useCallback } from 'react';
 import API from '../../api';
-import ExportPdfButton from './ExportPdfButton'; // reutiliza el componente que ya tienes
+import ExportPdfButton from './ExportPdfButton';
 import ProfessorDetailModal from './ProfessorDetailModal';
+import EquipmentList from '../Prestamos/EquipmentList';
 
-// Ruta screenshot de tu estructura (opcional, para documentación)
 export const PROJECT_STRUCTURE_SCREENSHOT = '/mnt/data/6a6e0a2c-a24c-4988-9389-729f863d011b.png';
 
 export default function ReportsPage(){
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProf, setSelectedProf] = useState(null);
-  const navigate = useNavigate();
 
-  useEffect(()=>{
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      try {
-        // Endpoint que backend debe exponer: GET /api/reports/professors-with-loans
-        const res = await API.get('/reports/professors-with-loans');
-        if(mounted) setProfessors(res.data || []);
-      } catch (err) {
-        console.error('Error cargando profesores con préstamos', err);
-      } finally {
-        if(mounted) setLoading(false);
-      }
-    };
-    load();
-    return ()=> { mounted = false; };
-  },[]);
+  const refreshProfessors = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/reports/professors-with-loans');
+      setProfessors(res.data || []);
+    } catch (err) {
+      console.error('Error cargando profesores con préstamos', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(()=> {
+    refreshProfessors();
+  }, [refreshProfessors]);
 
   const columns = [
     { header: 'ID', key: 'id_Profesor' },
@@ -44,26 +39,6 @@ export default function ReportsPage(){
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ marginBottom: 20 }}>
-        <button 
-          onClick={() => navigate('/')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(51, 51, 51, 0.8)', 
-            color: 'white',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '20px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          <FaArrowLeft /> Volver al Menú
-        </button>
-      </div>
       <h2>Reportes — Profesores con préstamos</h2>
       <p style={{ fontSize: 13, color: '#555' }}>
         Lista de profesores que han prestado al menos un equipo. (Estructura del proyecto: {PROJECT_STRUCTURE_SCREENSHOT})
@@ -107,6 +82,11 @@ export default function ReportsPage(){
           onClose={() => setSelectedProf(null)}
         />
       )}
+
+      <hr style={{ margin: '24px 0' }} />
+
+      {/* Aquí incluimos el inventario y pasamos refreshProfessors como callback */}
+      <EquipmentList onLoanSuccess={() => refreshProfessors()} />
     </div>
   );
 }

@@ -1,46 +1,49 @@
-import React, { useEffect, useState, useRef } from 'react'; 
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from "react-icons/fa";
 
 function ScannerQR({ addScannedItem }) {
 
   const [scanStep, setScanStep] = useState('persona');
   const [scanResult, setScanResult] = useState(null);
 
-  const personaCodeRef = useRef(null);
-  const equipoCodeRef = useRef(null);
+  const personaCodeRef = useRef('');
+  const equipoCodeRef = useRef('');
+
+  const [personaCode, setPersonaCode] = useState('');
+  const [equipoCode, setEquipoCode] = useState('');
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    personaCodeRef.current = null;
-    equipoCodeRef.current = null;
+    personaCodeRef.current = '';
+    equipoCodeRef.current = '';
 
     const scanner = new Html5QrcodeScanner("reader", {
-      qrbox: { width: 250, height: 250 },
+      qrbox: { width: 300, height: 300 },
       fps: 10,
-      disableFlip: false,
+      disableFlip: true,
       aspectRatio: 1.0,
       videoConstraints: { facingMode: "environment" }
     });
 
     const success = (result) => {
-
       if (!personaCodeRef.current) {
         personaCodeRef.current = result;
+        setPersonaCode(result);
         setScanStep('equipo');
-        alert("Persona detectada. Ahora escanea el Equipo.");
         return;
       }
 
-      if (!equipoCodeRef.current && result !== personaCodeRef.current) {
+      if (!equipoCodeRef.current) {
         equipoCodeRef.current = result;
+        setEquipoCode(result);
         setScanResult(result);
 
         addScannedItem({
-          codigo: `P: ${personaCodeRef.current} / E: ${result}`,
-          hora: new Date().toLocaleTimeString(),
+          personaCodigo: personaCodeRef.current,
+          equipoCodigo: result,
+          hora: new Date().toLocaleString(),
         });
 
         scanner.clear();
@@ -48,7 +51,7 @@ function ScannerQR({ addScannedItem }) {
       }
     };
 
-    const error = () => {};
+    const error = (err) => console.warn(err);
 
     scanner.render(success, error);
 
@@ -58,134 +61,124 @@ function ScannerQR({ addScannedItem }) {
   }, [addScannedItem, navigate]);
 
   return (
-    <div className="scannerQR-page">
+    <div>
 
       <style>{`
         :root {
-          font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif;
+          font-family: 'Cambria', Cochin, Georgia, Times, Times New Roman, serif;
+          color-scheme: light dark;
+          --primary: steelblue;
+          --primary-light: lightsteelblue;
+          --text-muted: #666;
         }
 
-        body {
-          margin: 0;
-          padding: 0;
-        }
+        body, html { margin: 0; padding: 0; }
 
-        .scannerQR-page {
+        .scanner-container {
+          max-width: 600px;
+          margin: 50px auto;
+          padding: 40px;
+          border-radius: 12px;
           text-align: center;
-          margin-top: 30px;
         }
 
-        .volver-btn {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: rgba(51, 51, 51, 0.85);
-          color: white;
+        h1 { font-size: 32px; margin-bottom: 25px; }
+
+        .info-text { 
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 15px;
+          line-height: 1.5;
+        }
+
+        .step-text {
+          margin: 10px 0 20px;
+          font-size: 18px;
+          color: var(--text-muted);
+        }
+
+        .scanned-box p {
+          margin: 8px 0;
+          font-size: 18px;
+        }
+
+        .label { font-weight: bold; }
+
+        .scan-reset-btn {
+          margin-top: 20px;
+          padding: 12px 22px;
+          font-size: 17px;
           border: none;
-          padding: 10px 20px;
-          border-radius: 20px;
+          border-radius: 12px;
           cursor: pointer;
-          font-size: 14px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-          margin: 0 auto 25px auto;
           transition: 0.2s;
         }
 
-        .volver-btn:hover {
-          background: rgba(70, 70, 70, 0.9);
-        }
-
-        h1 {
-          color: steelblue;
-          margin-bottom: 20px;
-        }
-
-        .scan-step-box {
-          margin: 20px auto;
-          padding: 10px 20px;
-          background: #f0f0f0;
-          border-radius: 8px;
-          display: inline-block;
-        }
-
-        .scan-step-box strong {
-          color: steelblue;
-        }
-
-        .success-box {
-          margin-top: 30px;
-          font-size: 20px;
-          font-weight: bold;
-          color: steelblue;
-        }
-
-        .helper-text {
-          color: #777;
+        .detected {
           margin-top: 25px;
-          font-size: 14px;
+          font-size: 22px;
+          font-weight: bold;
+        }
+
+        .helper-text { font-size: 13px; margin-top: 5px; }
+
+        @media (prefers-color-scheme: light) {
+          body { background: #f4f4f4; }
+          .scanner-container {
+            background: white;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          }
+          h1 { color: var(--primary); }
+          .label { color: var(--primary); }
+          .scan-reset-btn { background: var(--primary-light); color: #213547; }
+          .scan-reset-btn:hover { background: var(--primary); color: white; }
         }
 
         @media (prefers-color-scheme: dark) {
-
-          body {
-            background-color: #1f1f1f;
+          body { background: #1f1f1f; }
+          .scanner-container {
+            background: #2a2a2a;
             color: #f5f5f5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
           }
-
-          .volver-btn {
-            background: rgba(200, 200, 200, 0.15);
-            color: white;
-          }
-
-          .volver-btn:hover {
-            background: rgba(220, 220, 220, 0.25);
-          }
-
-          h1 {
-            color: lightsteelblue;
-          }
-
-          .scan-step-box {
-            background: #333;
-            color: white;
-          }
-
-          .scan-step-box strong {
-            color: lightsteelblue;
-          }
-
-          .success-box {
-            color: lightsteelblue;
-          }
-
-          .helper-text {
-            color: #ccc;
-          }
+          h1 { color: var(--primary-light); }
+          .label { color: var(--primary-light); }
+          .scan-reset-btn { background: var(--primary); color: white; }
+          .scan-reset-btn:hover { background: var(--primary-light); color: white; }
         }
       `}</style>
 
-      <button className="volver-btn" onClick={() => navigate('/')}>
-        <FaArrowLeft /> Volver al Menú
-      </button>
 
-      <h1>Escaneo de QR</h1>
+      <div className="scanner-container">
+        <h1>Scaneo de QR</h1>
 
-      <div className="scan-step-box">
-        Escaneando: <strong>{scanStep === 'persona' ? '👤 PROFESOR' : '💻 EQUIPO'}</strong>
-      </div>
+        <p className="info-text">
+          Escanea primero a la persona<br/>y luego el equipo.
+        </p>
 
-      {scanResult ? (
-        <div className="success-box">
-          ¡Escaneo Exitoso! <br />
-          Datos guardados correctamente.
+        <p className="step-text">
+          Paso actual: <strong>{scanStep === 'persona' ? 'Persona' : 'Equipo'}</strong>
+        </p>
+
+        <div className="scanned-box">
+          <p><span className="label">Persona:</span> {personaCode || 'Pendiente'}</p>
+          <p><span className="label">Equipo:</span> {equipoCode || 'Pendiente'}</p>
         </div>
-      ) : (
-        <div id="reader" style={{ width: "100%", maxWidth: "500px", margin: "auto" }}></div>
-      )}
 
-      <p className="helper-text">
-        (Apunta la cámara al QR del {scanStep === 'persona' ? 'Profesor' : 'Equipo'})
-      </p>
+        {
+          scanResult ? (
+            <>
+              <h2>¡Escaneo Exitoso!</h2>
+              <p>Código: <strong>{scanResult}</strong></p>
+            </>
+          ) : (
+            <div id="reader" style={{ width: '350px', margin: 'auto' }}></div>
+          )
+        }
+
+        <p className="helper-text">(Apunta la cámara al QR)</p>
+      </div>
 
     </div>
   );
