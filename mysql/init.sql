@@ -143,7 +143,7 @@ INSERT INTO Equipo (id_equipo, Codigo_qr, Tipo_equipo, Descripcion, Estado) VALU
 
 -- Inserts actualizados con numero_telefono
 INSERT INTO Profesor (id_Profesor, Nombre, Email_institucional, Rut, numero_telefono, Password, Activo) VALUES (1, 'Pepe Cortisona', 'Pepe.Cortisona@Unach.cl', '12345678-9', '+56911111111', 'Condorito', 1);
-INSERT INTO Profesor (id_Profesor, Nombre, Email_institucional, Rut, numero_telefono, Password, Activo) VALUES (2, 'HuevoDuro', 'Huevo.Duro@Unach.cl', '98765432-1', '+56922222222', 'Cone', 1);
+INSERT INTO Profesor (id_Profesor, Nombre, Email_institucional, Rut, numero_telefono, Password, Activo) VALUES (2, 'HuevoDuro', 'crsandovalmardones@gmail.com', '98765432-1', '+56999655922', 'Cone', 1);
 INSERT INTO Profesor (id_Profesor, Nombre, Email_institucional, Rut, numero_telefono, Password, Activo) VALUES (3, 'Yayita', 'Yayitaaa@Unach.cl', '2222222-5', '+56933333333', 'HuevoDuro', 1);
 INSERT INTO Profesor (id_Profesor, Nombre, Email_institucional, Rut, numero_telefono, Password, Activo) VALUES (4, 'Diego Castro', 'diegocastro@unach.cl', '21695092-5', '+56944444444', '12345', 1);
 
