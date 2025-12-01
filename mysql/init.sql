@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `sistema_db`.`Profesor` (
   `Nombre` VARCHAR(45) NOT NULL,
   `Email_institucional` VARCHAR(60) NOT NULL,
   `Rut` VARCHAR(60) NULL,
+  `numero_telefono` VARCHAR(20) NULL, -- AGREGADO AQUÍ
   `Password` VARCHAR(255) NOT NULL,
   `Activo` TINYINT NOT NULL DEFAULT 1, -- Default 1 (activo) para facilitar
   PRIMARY KEY (`id_Profesor`),

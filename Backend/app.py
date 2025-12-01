@@ -1,3 +1,42 @@
+# Este archivo utiliza los siguientes patrones de diseño de manera implícita:
+#
+# 1) Patrón Factory Method (Creacional)
+#    La función get_db_connection() actúa como una fábrica de conexiones a la
+#    base de datos. En lugar de que cada módulo cree su propio objeto conexión,
+#    este método centraliza la creación y configuración, devolviendo siempre
+#    instancias listas para usar.
+#
+# 2) Patrón Facade (Fachada)
+#    El archivo app.py expone rutas REST que funcionan como una fachada del
+#    sistema. Cada endpoint (/, /api/equipos, /api/profesores, etc.) oculta la
+#    lógica interna, la estructura SQL y el manejo de conexiones. Desde fuera,
+#    solo se ve una capa sencilla de interacción HTTP.
+#
+# 3) Patrón Service Layer (Capa de Servicios)
+#    Aunque este archivo define rutas, delega parte del trabajo a servicios
+#    externos mediante blueprints (ej. reports_bp). Esto separa claramente la
+#    lógica de negocio de la comunicación HTTP, cumpliendo el rol de una capa de
+#    servicios encima de los controladores.
+#
+# 4) Patrón Transaction Script (Comportamiento)
+#    Cada ruta implementa un flujo secuencial simple para cumplir una tarea:
+#    obtener conexión → ejecutar consulta → devolver datos. Este estilo procedural
+#    encaja con el patrón Transaction Script, donde cada endpoint representa un
+#    “script” transaccional independiente.
+#
+# 5) Patrón Dependency Injection (leve)
+#    Las credenciales de conexión y parámetros del entorno se inyectan usando
+#    variables de entorno (os.getenv). Esto desacopla el código del entorno real
+#    y permite mover la aplicación entre Docker, local, o producción sin cambiar
+#    el código.
+#
+# En conjunto, estos patrones hacen que el backend sea modular, escalable,
+# mantenible y fácil de integrar con otros módulos como servicios, validaciones
+# y reportes.
+
+# ---------------------------------------------------------------
+
+
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
