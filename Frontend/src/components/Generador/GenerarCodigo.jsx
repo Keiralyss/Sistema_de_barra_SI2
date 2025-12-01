@@ -4,20 +4,24 @@ import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 
 export default function GenerarCodigo() {
-    const [texto, setTexto] = useState("");
-    const [tipo, setTipo] = useState("qr");
+    const [codigo, setCodigo] = useState("");
+    const [descripcion, setDescripcion] = useState("");
+    const [tipoEquipo, setTipoEquipo] = useState("");
+    const [tipo, setTipo] = useState("qr"); // tipo de código (qr o barcode)
     const [imagen, setImagen] = useState(null);
 
+    // Generar QR o código de barras
     const generar = async () => {
-        if (!texto) return alert("Escribe un texto primero.");
+        if (!codigo) return alert("Debes ingresar un código numérico.");
+        if (isNaN(Number(codigo))) return alert("El código debe ser numérico.");
 
         if (tipo === "qr") {
-            const dataURL = await QRCode.toDataURL(texto, { width: 300 });
+            const dataURL = await QRCode.toDataURL(String(codigo), { width: 300 });
             setImagen(dataURL);
         } else {
             try {
                 const canvas = document.createElement("canvas");
-                JsBarcode(canvas, texto, { format: "CODE128", width: 2, height: 60 });
+                JsBarcode(canvas, String(codigo), { format: "CODE128", width: 2, height: 60 });
                 const dataURL = canvas.toDataURL("image/png");
                 setImagen(dataURL);
             } catch (err) {
@@ -26,14 +30,16 @@ export default function GenerarCodigo() {
         }
     };
 
+    // Guardar en la base de datos
     const guardarEnDB = async () => {
-        if (!texto) return alert("Escribe un texto primero.");
+        if (!codigo) return alert("Debes ingresar un código.");
+        if (isNaN(Number(codigo))) return alert("El código debe ser numérico.");
+        if (!tipoEquipo) return alert("Debes ingresar el tipo de equipo.");
 
         const payload = {
-            id_equipo: Number(texto),   // Puedes cambiar esto si quieres otro ID
-            Codigo_qr: Number(texto),   // El QR o código de barra será el ID
-            Tipo_equipo: tipo === "qr" ? "QR" : "Barcode",
-            Descripcion: "Equipo generado desde GenerarCodigo.jsx",
+            Codigo_qr: Number(codigo),
+            Tipo_equipo: tipoEquipo,
+            Descripcion: descripcion || "Sin descripción",
             Estado: "Disponible"
         };
 
@@ -47,7 +53,7 @@ export default function GenerarCodigo() {
             const data = await resp.json();
 
             if (resp.ok) {
-                alert("Equipo guardado correctamente en la base de datos");
+                alert("Equipo guardado correctamente");
             } else {
                 alert("Error: " + data.error);
             }
@@ -56,6 +62,7 @@ export default function GenerarCodigo() {
         }
     };
 
+    // Descargar PDF
     const descargarPDF = () => {
         if (!imagen) return alert("Primero genera el código");
 
@@ -70,11 +77,31 @@ export default function GenerarCodigo() {
             <h2>Generar Código (QR o Código de Barras)</h2>
 
             <div style={{ marginBottom: "10px" }}>
-                <label>Texto a codificar: </label>
-                <input 
-                    type="text" 
-                    value={texto}
-                    onChange={(e) => setTexto(e.target.value)}
+                <label>Código numérico: </label>
+                <input
+                    type="number"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    style={{ padding: "5px", width: "250px" }}
+                />
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+                <label>Descripción: </label>
+                <input
+                    type="text"
+                    value={descripcion}
+                    onChange={(e) => setDescripcion(e.target.value)}
+                    style={{ padding: "5px", width: "250px" }}
+                />
+            </div>
+
+            <div style={{ marginBottom: "10px" }}>
+                <label>Tipo de equipo: </label>
+                <input
+                    type="text"
+                    value={tipoEquipo}
+                    onChange={(e) => setTipoEquipo(e.target.value)}
                     style={{ padding: "5px", width: "250px" }}
                 />
             </div>
@@ -91,7 +118,6 @@ export default function GenerarCodigo() {
                 Generar
             </button>
 
-            {/* Solo mostrar si ya generaste la imagen */}
             {imagen && (
                 <>
                     <div style={{ marginTop: "20px" }}>
@@ -115,5 +141,4 @@ export default function GenerarCodigo() {
             )}
         </div>
     );
-
 }

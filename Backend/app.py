@@ -112,8 +112,8 @@ def get_profesores():
 def add_equipo():
     data = request.get_json()
 
-    # Validaciones seguras según tu tabla
-    required_fields = ['id_equipo', 'Codigo_qr', 'Tipo_equipo', 'Estado']
+    # Validar campos del frontend (sin id_equipo)
+    required_fields = ['Codigo_qr', 'Tipo_equipo', 'Estado']
 
     for field in required_fields:
         if field not in data:
@@ -125,12 +125,19 @@ def add_equipo():
 
     try:
         with conn.cursor() as cursor:
+
+            # 1. Obtener el último ID existente
+            cursor.execute("SELECT COALESCE(MAX(id_equipo), 0) AS max_id FROM Equipo")
+            ultimo_id = cursor.fetchone()['max_id']
+            nuevo_id = ultimo_id + 1
+
+            # 2. Insertar con el nuevo ID
             sql = """
                 INSERT INTO Equipo (id_equipo, Codigo_qr, Tipo_equipo, Descripcion, Estado)
                 VALUES (%s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
-                data['id_equipo'],
+                nuevo_id,
                 data['Codigo_qr'],
                 data['Tipo_equipo'],
                 data.get('Descripcion', None),
@@ -140,17 +147,19 @@ def add_equipo():
             conn.commit()
 
         conn.close()
-        return jsonify({"mensaje": "Equipo creado exitosamente"}), 201
+        return jsonify({
+            "mensaje": "Equipo creado exitosamente",
+            "id_generado": nuevo_id
+        }), 201
 
     except pymysql.err.IntegrityError as e:
-        if "Duplicate entry" in str(e):
-            return jsonify({"error": "El id_equipo o Codigo_qr ya existe."}), 409
-
-        return jsonify({"error": str(e)}), 400
-    
+        if conn: conn.close()
+        return jsonify({"error": "Codigo_qr ya existe."}), 409
     except Exception as e:
         if conn: conn.close()
         return jsonify({"error": str(e)}), 500
+
+
 
 
 @app.route('/api/profesores', methods=['POST'])
