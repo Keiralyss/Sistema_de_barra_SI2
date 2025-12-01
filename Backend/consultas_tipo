@@ -1,73 +1,30 @@
-# Este archivo utiliza los siguientes patrones de diseño de manera implícita:
-#
-# 1) Patrón Facade (Fachada)
-#    El Blueprint "consultas" actúa como una fachada que centraliza todas las
-#    operaciones del sistema (profesores, equipos, préstamos y devoluciones).
-#    Gracias a esto, el frontend u otros módulos solo interactúan con una capa
-#    sencilla de rutas sin conocer la lógica interna ni el acceso a la base de datos.
-#
-# 2) Patrón Strategy (Estrategia)
-#    Antes de ejecutar cada operación importante, se elige una función de validación
-#    distinta según el caso: validar_profesor, validar_equipo, validar_prestamo,
-#    validar_detalle_prestamo, validar_devolucion, validar_eliminar_prestamo.
-#    Cada función representa una estrategia de validación independiente y
-#    especializada para cada tipo de operación.
-#
-# 3) Patrón Singleton (utilizado indirectamente)
-#    La función get_db() —proveniente del módulo database— suele implementarse como
-#    Singleton para que haya una única conexión por request. Este archivo depende
-#    de ese patrón aunque no lo implementa directamente.
-#
-# 4) Patrón Transaction Script
-#    Cada ruta maneja toda la lógica necesaria de una operación (consultas, inserts,
-#    updates, validaciones y transacciones). Este estilo organiza cada acción de
-#    negocio como un "script" secuencial y atómico, especialmente visible en:
-#    - agregar_equipo_a_prestamo()
-#    - devolver_equipo()
-#    donde se manejan commits, rollbacks y pasos agrupados.
-#
-# Estos patrones combinados permiten que el código sea modular, validado,
-# seguro en transacciones y fácil de mantener.
-
-#--------------------------------------------------
-
-
 from flask import Blueprint, request, jsonify
-# La función get_db se usará para obtener la conexión a MySQL
-from database import get_db 
-from validaciones import (
-    validar_profesor, 
-    validar_equipo, 
-    validar_prestamo,         # Validar encabezado del préstamo
-    validar_detalle_prestamo, # Validar la adición de un equipo (ítem)
-    validar_devolucion,       # Validar la devolución de un equipo (detalle)
-    validar_eliminar_prestamo # Validar eliminación del encabezado
-)
+from database import get_db
+from validaciones.alumnos_val import validar_alumno
+from validaciones.libros_val import validar_libro
+from validaciones.prestamos_val import validar_prestamo, validar_devolucion
 
-# Se utiliza un único Blueprint principal para todas las rutas
-consultas_bp = Blueprint("consultas", __name__) 
 
-# RUTAS PARA PROFESORES (CRUD)
+alumnos_bp = Blueprint("alumnos", __name__)
 
-# GET - obtener todos los profesores
-@consultas_bp.get("/profesores")
-def obtener_profesores():
+# GET - obtener todos los alumnos
+@consultas_bp.get("/alumnos")
+def obtener_alumnos():
     db = get_db()
-    cursor = db.cursor(dictionary=True) # Usamos dictionary=True para obtener resultados como dicts
+    cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM Profesor")
-    profesores = cursor.fetchall()
+    cursor.execute("SELECT * FROM alumnos")
+    alumnos = cursor.fetchall()
 
     cursor.close()
-    return jsonify(profesores)
+    return jsonify(alumnos)
 
 
-# POST - crear profesor
-@consultas_bp.post("/profesores")
-def crear_profesor():
+# POST - crear alumno
+@consultas_bp.post("/alumnos")
+def crear_alumno():
     data = request.json
-    # Usamos la nueva función de validación (asumimos que existe y fue creada)
-    error = validar_profesor(data)
+    error = validar_alumno(data)
 
     if error:
         return jsonify({"error": error}), 400
@@ -75,25 +32,20 @@ def crear_profesor():
     db = get_db()
     cursor = db.cursor()
 
-    sql = "INSERT INTO Profesor (nombre, apellido, email) VALUES (%s, %s, %s)"
+    sql = "INSERT INTO alumnos (nombre, apellido, email) VALUES (%s, %s, %s)"
     valores = (data["nombre"], data["apellido"], data["email"])
 
-    try:
-        cursor.execute(sql, valores)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error de BD al crear profesor: {e}"}), 500
-    finally:
-        cursor.close()
+    cursor.execute(sql, valores)
+    db.commit()
+    cursor.close()
 
-    return jsonify({"mensaje": "Profesor creado correctamente"}), 201
+    return jsonify({"mensaje": "Alumno creado correctamente"}), 201
 
-# PUT - actualizar profesor
-@consultas_bp.put("/profesores/<int:id_profesor>")
-def editar_profesor(id_profesor):
+# PUT - actualizar alumno
+@consultas_bp.put("/alumnos/<int:id_alumno>")
+def editar_alumno(id_alumno):
     data = request.json
-    error = validar_profesor(data) # Se asume que validar_profesor puede usarse para PUT
+    error = validar_alumno(data)
 
     if error:
         return jsonify({"error": error}), 400
@@ -102,92 +54,72 @@ def editar_profesor(id_profesor):
     cursor = db.cursor()
 
     sql = """
-        UPDATE Profesor 
+        UPDATE alumnos 
         SET nombre=%s, apellido=%s, email=%s
-        WHERE id_Profesor=%s
+        WHERE id_alumno=%s
     """
 
-    valores = (data["nombre"], data["apellido"], data["email"], id_profesor)
+    valores = (data["nombre"], data["apellido"], data["email"], id_alumno)
 
-    try:
-        cursor.execute(sql, valores)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error de BD al actualizar profesor: {e}"}), 500
-    finally:
-        cursor.close()
+    cursor.execute(sql, valores)
+    db.commit()
+    cursor.close()
 
-    return jsonify({"mensaje": "Profesor actualizado correctamente"})
+    return jsonify({"mensaje": "Alumno actualizado correctamente"})
 
 
-# DELETE - eliminar profesor
-@consultas_bp.delete("/profesores/<int:id_profesor>")
-def eliminar_profesor(id_profesor):
+# DELETE - eliminar alumno
+@consultas_bp.delete("/alumnos/<int:id_alumno>")
+def eliminar_alumno(id_alumno):
     db = get_db()
     cursor = db.cursor()
 
-    # Nota: Se debe tener cuidado con FKs aquí. Si tiene préstamos, fallará.
-    sql = "DELETE FROM Profesor WHERE id_Profesor=%s"
-    
-    try:
-        cursor.execute(sql, (id_profesor,))
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error: No se puede eliminar el profesor (posiblemente tiene préstamos asociados)"}), 400
-    finally:
-        cursor.close()
+    cursor.execute("DELETE FROM alumnos WHERE id_alumno=%s", (id_alumno,))
+    db.commit()
+    cursor.close()
 
-    return jsonify({"mensaje": "Profesor eliminado"})
+    return jsonify({"mensaje": "Alumno eliminado"})
 
-# RUTAS PARA EQUIPOS (CRUD)
+libros_bp = Blueprint("libros", __name__)
 
-# GET - obtener equipos
-@consultas_bp.get("/equipos")
-def obtener_equipos():
+# GET - obtener libros
+@consultas_bp.get("/libros")
+def obtener_libros():
     db = get_db()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM Equipo")
-    equipos = cursor.fetchall()
+    cursor.execute("SELECT * FROM libros")
+    libros = cursor.fetchall()
 
     cursor.close()
-    return jsonify(equipos)
+    return jsonify(libros)
 
-# POST - crear equipo
-@consultas_bp.post("/equipos")
-def crear_equipo():
+# POST - crear libro
+@consultas_bp.post("/libros")
+def crear_libro():
     data = request.json
-    # Usamos la nueva función de validación (asumimos que existe y fue creada)
-    error = validar_equipo(data)
+    error = validar_libro(data)
 
     if error:
         return jsonify({"error": error}), 400
 
     db = get_db()
     cursor = db.cursor()
-    sql = "INSERT INTO Equipo (nombre, serie, stock) VALUES (%s, %s, %s)"
-    valores = (data["nombre"], data["serie"], data["stock"])
 
-    try:
-        cursor.execute(sql, valores)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error de BD al registrar equipo: {e}"}), 500
-    finally:
-        cursor.close()
+    sql = "INSERT INTO libros (titulo, autor, stock) VALUES (%s, %s, %s)"
+    valores = (data["titulo"], data["autor"], data["stock"])
 
-    return jsonify({"mensaje": "Equipo registrado correctamente"}), 201
+    cursor.execute(sql, valores)
+    db.commit()
+    cursor.close()
 
-# 
+    return jsonify({"mensaje": "Libro registrado correctamente"}), 201
 
-# PUT - actualizar equipo
-@consultas_bp.put("/equipos/<int:id_equipo>")
-def editar_equipo(id_equipo):
+# PUT - actualizar libro
+@consultas_bp.put("/libros/<int:id_libro>")
+def editar_libro(id_libro):
     data = request.json
-    error = validar_equipo(data) 
+    error = validar_libro(data)
 
     if error:
         return jsonify({"error": error}), 400
@@ -196,200 +128,101 @@ def editar_equipo(id_equipo):
     cursor = db.cursor()
 
     sql = """
-        UPDATE Equipo 
-        SET nombre=%s, serie=%s, stock=%s
-        WHERE id_Equipo=%s
+        UPDATE libros 
+        SET titulo=%s, autor=%s, stock=%s
+        WHERE id_libro=%s
     """
 
-    valores = (data["nombre"], data["serie"], data["stock"], id_equipo)
+    valores = (data["titulo"], data["autor"], data["stock"], id_libro)
 
-    try:
-        cursor.execute(sql, valores)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error de BD al actualizar equipo: {e}"}), 500
-    finally:
-        cursor.close()
+    cursor.execute(sql, valores)
+    db.commit()
+    cursor.close()
 
-    return jsonify({"mensaje": "Equipo actualizado correctamente"})
+    return jsonify({"mensaje": "Libro actualizado correctamente"})
 
-# DELETE - borrar equipo
-@consultas_bp.delete("/equipos/<int:id_equipo>")
-def eliminar_equipo(id_equipo):
+# DELETE - borrar libro
+@consultas_bp.delete("/libros/<int:id_libro>")
+def eliminar_libro(id_libro):
     db = get_db()
     cursor = db.cursor()
 
-    sql = "DELETE FROM Equipo WHERE id_Equipo=%s"
+    cursor.execute("DELETE FROM libros WHERE id_libro=%s", (id_libro,))
+    db.commit()
+    cursor.close()
 
-    try:
-        cursor.execute(sql, (id_equipo,))
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": "Error: No se puede eliminar el equipo (posiblemente tiene préstamos asociados)"}), 400
-    finally:
-        cursor.close()
+    return jsonify({"mensaje": "Libro eliminado"})
 
-    return jsonify({"mensaje": "Equipo eliminado"})
 
-# RUTAS PARA PRÉSTAMOS (Encabezado y Detalle) - Lógica de Negocio
-# GET - obtener todos los préstamos (Encabezados + Detalles)
-@consultas_bp.get("/prestamos")
+prestamos_bp = Blueprint("prestamos", __name__)
+
+# GET - obtener préstamos
+@prestamos_bp.get("/prestamos")
 def obtener_prestamos():
     db = get_db()
     cursor = db.cursor(dictionary=True)
-    
-    # Se recomienda hacer un JOIN para obtener un resumen completo de cada préstamo
-    sql = """
-    SELECT 
-        p.id_Prestamo, p.fk_id_Profesor, p.fecha_solicitud, p.estado AS estado_prestamo,
-        dp.id_Detalle_prestamo, dp.fk_id_equipo, dp.fecha_entrega, dp.estado AS estado_detalle
-    FROM Prestamo p
-    JOIN Detalle_prestamo dp ON p.id_Prestamo = dp.fk_id_Prestamo
-    ORDER BY p.id_Prestamo DESC, dp.id_Detalle_prestamo
-    """
-    cursor.execute(sql)
+    cursor.execute("SELECT * FROM prestamos")
     return jsonify(cursor.fetchall())
 
-
-# POST - Crear Encabezado de Préstamo (solo la solicitud)
+# POST - crear préstamo
 @consultas_bp.post("/prestamos")
-def crear_encabezado_prestamo():
+def realizar_prestamo():
     data = request.json
-    
-    error = validar_prestamo(data) # Valida existencia del profesor
-    if error is not True:
+
+    error = validar_prestamo(data)
+    if error:
         return jsonify({"error": error}), 400
 
     db = get_db()
     cursor = db.cursor()
 
-    # Solo insertamos el ID del profesor, fecha_solicitud y estado inicial
     sql = """
-        INSERT INTO Prestamo(fk_id_Profesor, fecha_solicitud, estado)
-        VALUES (%s, NOW(), 'Solicitado')
+        INSERT INTO prestamos(id_alumno, id_libro, fecha_prestamo)
+        VALUES (%s, %s, NOW())
     """
-    valores = (data["fk_id_Profesor"],)
+    valores = (data["id_alumno"], data["id_libro"])
 
-    try:
-        cursor.execute(sql, valores)
-        id_prestamo = cursor.lastrowid # Obtener el ID recién creado
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error al crear encabezado de préstamo: {e}"}), 500
-    finally:
-        cursor.close()
+    cursor.execute(sql, valores)
+    cursor.execute("UPDATE libros SET stock = stock - 1 WHERE id_libro=%s", (data["id_libro"],))
+    db.commit()
+    cursor.close()
 
-    return jsonify({"mensaje": "Encabezado de Préstamo creado con éxito", "id_Prestamo": id_prestamo}), 201
+    return jsonify({"mensaje": "Préstamo registrado con éxito"})
 
-
-# POST - Agregar Equipo a un Préstamo Existente (Detalle_prestamo)
-@consultas_bp.post("/detalle-prestamos")
-def agregar_equipo_a_prestamo():
+# POST - marcar devolución
+@consultas_bp.post("/devoluciones")
+def devolver_libro():
     data = request.json
 
-    # Valida existencia de Préstamo, Equipo, y lo más importante: 
-    # que el equipo NO esté ya en estado 'Prestado'.
-    error = validar_detalle_prestamo(data)
-    if error is not True:
+    error = validar_devolucion(data)
+    if error:
         return jsonify({"error": error}), 400
 
     db = get_db()
     cursor = db.cursor()
-    
-    id_equipo = data["fk_id_equipo"]
 
-    # 1. Insertar el Detalle_prestamo (marcándolo como 'Prestado')
-    sql_detalle = """
-        INSERT INTO Detalle_prestamo(fk_id_equipo, fk_id_Prestamo, fecha_entrega, estado)
-        VALUES (%s, %s, NOW(), 'Prestado')
+    sql = """
+        UPDATE prestamos 
+        SET fecha_devolucion = NOW()
+        WHERE id_prestamo=%s
     """
-    valores_detalle = (id_equipo, data["fk_id_Prestamo"])
 
-    # 2. Actualizar el stock/estado global del Equipo
-    sql_equipo = "UPDATE Equipo SET stock = stock - 1 WHERE id_Equipo=%s"
+    cursor.execute(sql, (data["id_prestamo"],))
+    cursor.execute("UPDATE libros SET stock = stock + 1 WHERE id_libro=%s", (data["id_libro"],))
+    db.commit()
+    cursor.close()
 
-    try:
-        # INICIO DE TRANSACCIÓN ATÓMICA
-        cursor.execute(sql_detalle, valores_detalle)
-        cursor.execute(sql_equipo, (id_equipo,))
-        db.commit() # Si ambos son exitosos, se guarda
-    except Exception as e:
-        db.rollback() # Si algo falla, se revierte todo
-        return jsonify({"error": f"Error en la transacción de agregar equipo: {e}"}), 500
-    finally:
-        cursor.close()
+    return jsonify({"mensaje": "Devolución registrada"})
 
-    return jsonify({"mensaje": "Equipo agregado al préstamo y marcado como prestado con éxito"})
-
-
-# PUT - Marcar Devolución de un Equipo Específico (Detalle_prestamo)
-@consultas_bp.put("/devoluciones/<int:id_detalle>")
-def devolver_equipo(id_detalle):
-    
-    # 1. Validar si el detalle existe y no está ya devuelto
-    error = validar_devolucion(id_detalle)
-    if error is not True:
-        return jsonify({"error": error}), 400
-
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-
-    try:
-        # INICIO DE TRANSACCIÓN ATÓMICA
-        
-        # 2. Obtener el ID del equipo antes de actualizar
-        cursor.execute("SELECT fk_id_equipo FROM Detalle_prestamo WHERE id_Detalle_prestamo = %s", (id_detalle,))
-        detalle_info = cursor.fetchone()
-        if not detalle_info:
-             # Debería ser atrapado por la validación, pero como doble chequeo
-            return jsonify({"error": "Detalle de préstamo no encontrado."}), 404
-        
-        id_equipo = detalle_info["fk_id_equipo"]
-        
-        # 3. Actualizar el Detalle_prestamo a 'Devuelto' con fecha de hoy
-        sql_detalle = """
-            UPDATE Detalle_prestamo 
-            SET fecha_devolucion = NOW(), estado = 'Devuelto'
-            WHERE id_Detalle_prestamo=%s
-        """
-        cursor.execute(sql_detalle, (id_detalle,))
-        
-        # 4. Actualizar stock del Equipo (stock = stock + 1)
-        sql_equipo = "UPDATE Equipo SET stock = stock + 1 WHERE id_Equipo=%s"
-        cursor.execute(sql_equipo, (id_equipo,))
-        
-        db.commit() # Si ambos son exitosos, se guarda
-    except Exception as e:
-        db.rollback() # Si algo falla, se revierte todo
-        return jsonify({"error": f"Error en la transacción de devolución: {e}"}), 500
-    finally:
-        cursor.close()
-
-    return jsonify({"mensaje": "Devolución registrada correctamente"})
-
-# DELETE — eliminar registro de préstamo (Encabezado)
-@consultas_bp.delete("/prestamos/<int:id_prestamo>")
-def borrar_prestamo(id_prestamo):
-    # 1. Validar que no tenga detalles asociados (equipos prestados)
-    error = validar_eliminar_prestamo(id_prestamo)
-    if error is not True:
-        return jsonify({"error": error}), 400
-        
+# DELETE — eliminar registro de préstamo
+@consultas_bp.delete("/prestamos/<int:id>")
+def borrar_prestamo(id):
     db = get_db()
     cursor = db.cursor()
 
-    sql = "DELETE FROM Prestamo WHERE id_Prestamo = %s"
+    cursor.execute("DELETE FROM prestamos WHERE id = %s", (id,))
+    db.commit()
 
-    try:
-        cursor.execute(sql, (id_prestamo,))
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": f"Error de BD al eliminar préstamo: {e}"}), 500
-    finally:
-        cursor.close()
+    cursor.close()
+    return jsonify({"mensaje": "Préstamo eliminado"}), 200
 
-    return jsonify({"mensaje": "Encabezado de Préstamo eliminado"}), 200
