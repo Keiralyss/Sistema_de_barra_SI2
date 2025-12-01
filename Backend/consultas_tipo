@@ -1,3 +1,37 @@
+# Este archivo utiliza los siguientes patrones de diseño de manera implícita:
+#
+# 1) Patrón Facade (Fachada)
+#    El Blueprint "consultas" actúa como una fachada que centraliza todas las
+#    operaciones del sistema (profesores, equipos, préstamos y devoluciones).
+#    Gracias a esto, el frontend u otros módulos solo interactúan con una capa
+#    sencilla de rutas sin conocer la lógica interna ni el acceso a la base de datos.
+#
+# 2) Patrón Strategy (Estrategia)
+#    Antes de ejecutar cada operación importante, se elige una función de validación
+#    distinta según el caso: validar_profesor, validar_equipo, validar_prestamo,
+#    validar_detalle_prestamo, validar_devolucion, validar_eliminar_prestamo.
+#    Cada función representa una estrategia de validación independiente y
+#    especializada para cada tipo de operación.
+#
+# 3) Patrón Singleton (utilizado indirectamente)
+#    La función get_db() —proveniente del módulo database— suele implementarse como
+#    Singleton para que haya una única conexión por request. Este archivo depende
+#    de ese patrón aunque no lo implementa directamente.
+#
+# 4) Patrón Transaction Script
+#    Cada ruta maneja toda la lógica necesaria de una operación (consultas, inserts,
+#    updates, validaciones y transacciones). Este estilo organiza cada acción de
+#    negocio como un "script" secuencial y atómico, especialmente visible en:
+#    - agregar_equipo_a_prestamo()
+#    - devolver_equipo()
+#    donde se manejan commits, rollbacks y pasos agrupados.
+#
+# Estos patrones combinados permiten que el código sea modular, validado,
+# seguro en transacciones y fácil de mantener.
+
+#--------------------------------------------------
+
+
 from flask import Blueprint, request, jsonify
 # La función get_db se usará para obtener la conexión a MySQL
 from database import get_db 
@@ -13,7 +47,7 @@ from validaciones import (
 # Se utiliza un único Blueprint principal para todas las rutas
 consultas_bp = Blueprint("consultas", __name__) 
 
-# RUTAS PARA PROFESORES (CRUD) - Anteriormente Alumnos
+# RUTAS PARA PROFESORES (CRUD)
 
 # GET - obtener todos los profesores
 @consultas_bp.get("/profesores")
@@ -107,7 +141,7 @@ def eliminar_profesor(id_profesor):
 
     return jsonify({"mensaje": "Profesor eliminado"})
 
-# RUTAS PARA EQUIPOS (CRUD) - Anteriormente Libros
+# RUTAS PARA EQUIPOS (CRUD)
 
 # GET - obtener equipos
 @consultas_bp.get("/equipos")
@@ -274,7 +308,7 @@ def agregar_equipo_a_prestamo():
     """
     valores_detalle = (id_equipo, data["fk_id_Prestamo"])
 
-    # 2. Actualizar el stock/estado global del Equipo (opcional si usas stock)
+    # 2. Actualizar el stock/estado global del Equipo
     sql_equipo = "UPDATE Equipo SET stock = stock - 1 WHERE id_Equipo=%s"
 
     try:
