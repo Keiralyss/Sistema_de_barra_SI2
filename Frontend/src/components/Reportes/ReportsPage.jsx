@@ -1,10 +1,10 @@
 // frontend/src/components/reports/ReportsPage.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import API from '../../api';
-import ExportPdfButton from './ExportPdfButton'; // reutiliza el componente que ya tienes
+import ExportPdfButton from './ExportPdfButton';
 import ProfessorDetailModal from './ProfessorDetailModal';
+import EquipmentList from '../Prestamos/EquipmentList';
 
-// Ruta screenshot de tu estructura (opcional, para documentación)
 export const PROJECT_STRUCTURE_SCREENSHOT = '/mnt/data/6a6e0a2c-a24c-4988-9389-729f863d011b.png';
 
 export default function ReportsPage(){
@@ -12,23 +12,21 @@ export default function ReportsPage(){
   const [loading, setLoading] = useState(true);
   const [selectedProf, setSelectedProf] = useState(null);
 
-  useEffect(()=>{
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      try {
-        // Endpoint que backend debe exponer: GET /api/reports/professors-with-loans
-        const res = await API.get('/reports/professors-with-loans');
-        if(mounted) setProfessors(res.data || []);
-      } catch (err) {
-        console.error('Error cargando profesores con préstamos', err);
-      } finally {
-        if(mounted) setLoading(false);
-      }
-    };
-    load();
-    return ()=> { mounted = false; };
-  },[]);
+  const refreshProfessors = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/reports/professors-with-loans');
+      setProfessors(res.data || []);
+    } catch (err) {
+      console.error('Error cargando profesores con préstamos', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(()=> {
+    refreshProfessors();
+  }, [refreshProfessors]);
 
   const columns = [
     { header: 'ID', key: 'id_Profesor' },
@@ -84,6 +82,11 @@ export default function ReportsPage(){
           onClose={() => setSelectedProf(null)}
         />
       )}
+
+      <hr style={{ margin: '24px 0' }} />
+
+      {/* Aquí incluimos el inventario y pasamos refreshProfessors como callback */}
+      <EquipmentList onLoanSuccess={() => refreshProfessors()} />
     </div>
   );
 }
