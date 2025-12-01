@@ -3,26 +3,23 @@ import './App.css';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import ScannerPage from './components/ScannerBar/ScannerPage.jsx';
 import ScannerQR from './components/ScannerQR/ScannerQR.jsx';
+import ReportsPage from './components/Reportes/ReportsPage.jsx';
 import Login from './components/Login/Login.jsx';
 
 function HomePage({ scannedData, removeScannedItem, updateScannedItem, usuario, onLogout }) {
     const navigate = useNavigate();
 
-    const handleNavigation = () => {
-        navigate('/scanner'); 
-    };
-
-    const handleNavigationQR = () => {
-        navigate('/scanner-qr'); 
-    };
+    const handleNavigation = () => navigate('/scanner');
+    const handleNavigationQR = () => navigate('/scanner-qr');
+    const handleNavigateReports = () => navigate('/reportes');
 
     return (
         <div className="container">
-            <div className='user-header' style={{display: 'flex', justifyContent: 'space-between', alignItems:'center', marginBottom: '20px', color:'white'}}>
+
+            <div className='user-header' 
+                style={{display: 'flex', justifyContent: 'space-between', alignItems:'center', marginBottom: '20px', color:'white'}}
+            >
                 <h2>Hola, {usuario}</h2>
-                <button onClick={onLogout} style={{backgroundColor: '#ff6b6b', padding: '5px 15px'}}>
-                    Salir
-                </button>
             </div>
 
             <div className="data-container">
@@ -30,10 +27,12 @@ function HomePage({ scannedData, removeScannedItem, updateScannedItem, usuario, 
                     {scannedData.length > 0 ? 
                         scannedData.map((data, index) => (
                             <li key={index}>
-                                <strong>Código:</strong> {data.codigo} 
-                                <br />
+                                <strong>Código persona:</strong> {data.personaCodigo}
+                                <br/>
+                                <strong>Código equipo:</strong> {data.equipoCodigo}
+                                <br/>
                                 <strong>Hora:</strong> {data.hora}
-                                <br />
+                                <br/>
                                 <strong>Estado:</strong>
                                 <select 
                                     value={data.estado}
@@ -43,6 +42,7 @@ function HomePage({ scannedData, removeScannedItem, updateScannedItem, usuario, 
                                     <option value="Fuera de plazo">Fuera de plazo</option>
                                     <option value="Pendiente">Pendiente</option>
                                 </select>
+
                                 <button onClick={() => removeScannedItem(index)}>Borrar</button> 
                             </li>
                         )) 
@@ -50,22 +50,34 @@ function HomePage({ scannedData, removeScannedItem, updateScannedItem, usuario, 
                 </ul>
             </div>
 
-            <div className="button-container">
-                <div className="card">
-                    <button onClick={handleNavigation}>
-                        Ir a escáner de barra 
-                    </button>
-                    <br />
-                    <button onClick={handleNavigationQR}>
-                        Ir a escáner de QR
-                    </button>
-                </div>
+            <div className="button-container card" 
+                style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px', alignItems: 'center', padding: '20px', width: '300px' }}>
+
+                <button onClick={handleNavigation}>
+                    Ir a escáner de barras
+                </button>
+
+                <button onClick={handleNavigationQR}>
+                    Ir a escáner de QR
+                </button>
+
+                <button onClick={handleNavigateReports}>
+                    Ir a Reportes
+                </button>
+
+                <button onClick={onLogout} 
+                    style={{ backgroundColor: '#C82909', color: 'white', padding: '5px 15px' }}>
+                    Salir
+                </button>
             </div>
-        </div>
+
+
+            </div>
     );
 }
 
 function App() {
+
     const [scannedData, setScannedData] = useState([]);
 
     const [usuario, setUsuario] = useState(() => {
@@ -86,8 +98,9 @@ function App() {
         setScannedData((prevData) => [
             ...prevData, 
             { 
-                codigo: item.codigo, 
-                hora: item.hora, 
+                personaCodigo: item.personaCodigo,
+                equipoCodigo: item.equipoCodigo,
+                hora: item.hora,
                 estado: 'Dentro de plazo' 
             }
         ]);
@@ -108,37 +121,39 @@ function App() {
     return (
         <>
             <Routes>
+
                 <Route
-                   path ="/login"
-                   element = {
-                    !usuario ?
-                    <Login onLoginSuccess={handleLogin}/> :
-                    <Navigate to="/" />
-                   }     
+                    path="/login"
+                    element={
+                        !usuario ? <Login onLoginSuccess={handleLogin}/> : <Navigate to="/" />
+                    }
                 />
+
                 <Route 
                     path="/" 
                     element={
                         usuario ? (
-                        <>
-                            <header>
-                                Prestamo de Equipos
-                            </header>
-                            <HomePage 
-                                scannedData={scannedData} 
-                                removeScannedItem={removeScannedItem} 
-                                updateScannedItem={updateScannedItem} 
-                                usuario={usuario}
-                                onLogout={handleLogout}
-                            />
-                        </>
+                            <>
+                                <header>Préstamo de Equipos</header>
+
+                                <HomePage 
+                                    scannedData={scannedData}
+                                    removeScannedItem={removeScannedItem}
+                                    updateScannedItem={updateScannedItem}
+                                    usuario={usuario}
+                                    onLogout={handleLogout}
+                                />
+                            </>
                         ) : (
                             <Navigate to="/login" />
                         )
                     } 
                 />
-                <Route path="/scanner-qr" element={ usuario ? <ScannerQR addScannedItem={addScannedItem} /> : <Navigate to ="/login"/>} />
-                <Route path="/scanner" element={ usuario ? <ScannerPage addScannedItem={addScannedItem} /> : <Navigate to ="/login" />} />
+
+                <Route path="/scanner-qr" element={usuario ? <ScannerQR addScannedItem={addScannedItem} /> : <Navigate to="/login" />} />
+                <Route path="/scanner" element={usuario ? <ScannerPage addScannedItem={addScannedItem} /> : <Navigate to="/login" />} />
+                <Route path="/reportes" element={usuario ? <ReportsPage /> : <Navigate to="/login" />} />
+
             </Routes>
         </>
     );

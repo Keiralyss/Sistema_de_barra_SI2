@@ -101,6 +101,11 @@ def add_profesor():
         if conn: conn.close()
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
+from api.reports import reports_bp
+app.register_blueprint(reports_bp, url_prefix="/api")
+
+
+
 if __name__ == '__main__':
     # Esto imprime las rutas al iniciar
     print(app.url_map)
