@@ -7,6 +7,9 @@ function MenuPrincipal({ scannedData, removeScannedItem, updateScannedItem, usua
     const handleNavigateReports = () => navigate('/reportes');
     const handleNavigation = () => navigate('/scanner');
     const handleNavigationQR = () => navigate('/scanner-qr');
+    const handleNavigateGenerarCodigo = () => navigate('/generar-codigo');
+
+
 
     return (
         <div className="container">
@@ -76,6 +79,11 @@ function MenuPrincipal({ scannedData, removeScannedItem, updateScannedItem, usua
                 <div className="card">  
                     <button onClick={onLogout} style={{ backgroundColor: '#C82909', padding: '5px 15px' }}>
                     Salir
+                    </button>
+                </div>
+                <div className="card">
+                    <button onClick={handleNavigateGenerarCodigo} style={{ backgroundColor: '#C82909', padding: '5px 15px' }}>
+                        Generar QR / Código de Barras
                     </button>
                 </div>
             </div>

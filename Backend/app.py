@@ -66,7 +66,7 @@ def get_db_connection():
         print(f"Error conectando a MySQL: {e}")
         return None
 
-# --- RUTA 1: RAIZ (Para ver si vive) ---
+# --- RUTA 1: RAIZ ---
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({
@@ -74,7 +74,7 @@ def home():
         "rutas_disponibles": ["/api/equipos", "/"]
     })
 
-# --- RUTA 2: EQUIPOS (La que buscas) ---
+# --- RUTA 2: EQUIPOS ---
 @app.route('/api/equipos', methods=['GET'])
 def get_equipos():
     conn = get_db_connection()
@@ -106,6 +106,52 @@ def get_profesores():
     except Exception as e:
         if conn: conn.close()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/equipos', methods=['POST'])
+def add_equipo():
+    data = request.get_json()
+
+    # Validaciones seguras según tu tabla
+    required_fields = ['id_equipo', 'Codigo_qr', 'Tipo_equipo', 'Estado']
+
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Falta el campo obligatorio: {field}"}), 400
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Falló conexión DB"}), 500
+
+    try:
+        with conn.cursor() as cursor:
+            sql = """
+                INSERT INTO Equipo (id_equipo, Codigo_qr, Tipo_equipo, Descripcion, Estado)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql, (
+                data['id_equipo'],
+                data['Codigo_qr'],
+                data['Tipo_equipo'],
+                data.get('Descripcion', None),
+                data['Estado']
+            ))
+
+            conn.commit()
+
+        conn.close()
+        return jsonify({"mensaje": "Equipo creado exitosamente"}), 201
+
+    except pymysql.err.IntegrityError as e:
+        if "Duplicate entry" in str(e):
+            return jsonify({"error": "El id_equipo o Codigo_qr ya existe."}), 409
+
+        return jsonify({"error": str(e)}), 400
+    
+    except Exception as e:
+        if conn: conn.close()
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/profesores', methods=['POST'])
 def add_profesor():
