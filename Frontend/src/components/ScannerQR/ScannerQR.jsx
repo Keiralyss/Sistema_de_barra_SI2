@@ -1,110 +1,184 @@
-import React, { useEffect, useState, useRef } from 'react';
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from "react-icons/fa";
 
 function ScannerQR({ addScannedItem }) {
 
-  const [scanStep, setScanStep] = useState('persona'); // 'persona' o 'equipo'
+  const [scanStep, setScanStep] = useState('persona');
   const [scanResult, setScanResult] = useState(null);
 
-  // Usamos Refs para mantener el valor dentro del callback del escáner sin reiniciar el useEffect
-  const personaCodeRef = useRef(null);
-  const equipoCodeRef = useRef(null);
+  const personaCodeRef = useRef('');
+  const equipoCodeRef = useRef('');
+
+  const [personaCode, setPersonaCode] = useState('');
+  const [equipoCode, setEquipoCode] = useState('');
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Limpiamos refs al montar
-    personaCodeRef.current = null;
-    equipoCodeRef.current = null;
+    personaCodeRef.current = '';
+    equipoCodeRef.current = '';
 
     const scanner = new Html5QrcodeScanner("reader", {
-      qrbox: { width: 250, height: 250 }, 
+      qrbox: { width: 300, height: 300 },
       fps: 10,
-      disableFlip: false, 
+      disableFlip: true,
       aspectRatio: 1.0,
-      videoConstraints: { facingMode: "environment" } 
+      videoConstraints: { facingMode: "environment" }
     });
 
     const success = (result) => {
-      // 1. PASO 1: Escanear Persona
       if (!personaCodeRef.current) {
-        console.log("Persona detectada:", result);
         personaCodeRef.current = result;
-        setScanStep('equipo'); 
-        
-
-        alert("Persona detectada. Ahora escanea el Equipo.");
+        setPersonaCode(result);
+        setScanStep('equipo');
         return;
       }
 
-
-      if (!equipoCodeRef.current && result !== personaCodeRef.current) {
-        console.log("Equipo detectado:", result);
+      if (!equipoCodeRef.current) {
         equipoCodeRef.current = result;
-        setScanResult(result); 
+        setEquipoCode(result);
+        setScanResult(result);
+
         addScannedItem({
-          codigo: `P: ${personaCodeRef.current} / E: ${result}`,
-          hora: new Date().toLocaleTimeString(),
+          personaCodigo: personaCodeRef.current,
+          equipoCodigo: result,
+          hora: new Date().toLocaleString(),
         });
+
         scanner.clear();
         navigate('/');
       }
     };
 
-    const error = (err) => {
-    };
+    const error = (err) => console.warn(err);
 
     scanner.render(success, error);
+
     return () => {
-      scanner.clear().catch((error) => console.error("Error limpiando scanner", error));
+      scanner.clear().catch(() => {});
     };
   }, [addScannedItem, navigate]);
 
   return (
-    <div className="CodeQR" style={{ textAlign: 'center', margin: '20px' }}>
-      
+    <div>
 
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-        <button 
-          onClick={() => navigate('/')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'rgba(51, 51, 51, 0.8)', color: 'white',
-            border: 'none', padding: '10px 20px', borderRadius: '20px',
-            cursor: 'pointer', fontSize: '14px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          <FaArrowLeft /> Volver al Menú
-        </button>
-      </div>
+      <style>{`
+        :root {
+          font-family: 'Cambria', Cochin, Georgia, Times, Times New Roman, serif;
+          color-scheme: light dark;
+          --primary: steelblue;
+          --primary-light: lightsteelblue;
+          --text-muted: #666;
+        }
 
-      <h1>Escaneo de QR</h1>
-      
+        body, html { margin: 0; padding: 0; }
 
-      <div style={{ marginBottom: '20px', padding: '10px', background: '#f0f0f0', borderRadius: '8px', display: 'inline-block' }}>
-        <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>
-            Escaneando: <span style={{ color: 'steelblue', fontSize: '1.2em' }}>
-                {scanStep === 'persona' ? '👤 PROFESOR' : '💻 EQUIPO'}
-            </span>
+        .scanner-container {
+          max-width: 600px;
+          margin: 50px auto;
+          padding: 40px;
+          border-radius: 12px;
+          text-align: center;
+        }
+
+        h1 { font-size: 32px; margin-bottom: 25px; }
+
+        .info-text { 
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 15px;
+          line-height: 1.5;
+        }
+
+        .step-text {
+          margin: 10px 0 20px;
+          font-size: 18px;
+          color: var(--text-muted);
+        }
+
+        .scanned-box p {
+          margin: 8px 0;
+          font-size: 18px;
+        }
+
+        .label { font-weight: bold; }
+
+        .scan-reset-btn {
+          margin-top: 20px;
+          padding: 12px 22px;
+          font-size: 17px;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .detected {
+          margin-top: 25px;
+          font-size: 22px;
+          font-weight: bold;
+        }
+
+        .helper-text { font-size: 13px; margin-top: 5px; }
+
+        @media (prefers-color-scheme: light) {
+          body { background: #f4f4f4; }
+          .scanner-container {
+            background: white;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          }
+          h1 { color: var(--primary); }
+          .label { color: var(--primary); }
+          .scan-reset-btn { background: var(--primary-light); color: #213547; }
+          .scan-reset-btn:hover { background: var(--primary); color: white; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+          body { background: #1f1f1f; }
+          .scanner-container {
+            background: #2a2a2a;
+            color: #f5f5f5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+          }
+          h1 { color: var(--primary-light); }
+          .label { color: var(--primary-light); }
+          .scan-reset-btn { background: var(--primary); color: white; }
+          .scan-reset-btn:hover { background: var(--primary-light); color: white; }
+        }
+      `}</style>
+
+
+      <div className="scanner-container">
+        <h1>Scaneo de QR</h1>
+
+        <p className="info-text">
+          Escanea primero a la persona<br/>y luego el equipo.
         </p>
+
+        <p className="step-text">
+          Paso actual: <strong>{scanStep === 'persona' ? 'Persona' : 'Equipo'}</strong>
+        </p>
+
+        <div className="scanned-box">
+          <p><span className="label">Persona:</span> {personaCode || 'Pendiente'}</p>
+          <p><span className="label">Equipo:</span> {equipoCode || 'Pendiente'}</p>
+        </div>
+
+        {
+          scanResult ? (
+            <>
+              <h2>¡Escaneo Exitoso!</h2>
+              <p>Código: <strong>{scanResult}</strong></p>
+            </>
+          ) : (
+            <div id="reader" style={{ width: '350px', margin: 'auto' }}></div>
+          )
+        }
+
+        <p className="helper-text">(Apunta la cámara al QR)</p>
       </div>
-
-      {scanResult ? (
-          <div>
-            <h2>¡Escaneo Exitoso!</h2>
-            <p>Datos guardados correctamente.</p>
-          </div>
-        ) : (
-
-          <div id="reader" style={{ width: '100%', maxWidth: '500px', margin: 'auto' }}></div>
-        )
-      }
-
-      <p className="helper-text" style={{ marginTop: '20px', color: '#666' }}>
-        (Apunta la cámara al QR del {scanStep === 'persona' ? 'Profesor' : 'Equipo'})
-      </p>
 
     </div>
   );
