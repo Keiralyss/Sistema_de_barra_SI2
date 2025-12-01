@@ -58,6 +58,7 @@ function ScannerPage({ addScannedItem }) {
         body {
           margin: 0;
           padding: 0;
+          background: #000000;
         }
 
         .scanner-page {
