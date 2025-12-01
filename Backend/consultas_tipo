@@ -32,17 +32,6 @@
 #--------------------------------------------------
 
 
-from flask import Blueprint, request, jsonify
-# La función get_db se usará para obtener la conexión a MySQL
-from database import get_db 
-from validaciones import (
-    validar_profesor, 
-    validar_equipo, 
-    validar_prestamo,         # Validar encabezado del préstamo
-    validar_detalle_prestamo, # Validar la adición de un equipo (ítem)
-    validar_devolucion,       # Validar la devolución de un equipo (detalle)
-    validar_eliminar_prestamo # Validar eliminación del encabezado
-)
 
 # Se utiliza un único Blueprint principal para todas las rutas
 consultas_bp = Blueprint("consultas", __name__) 
