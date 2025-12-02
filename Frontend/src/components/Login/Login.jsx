@@ -4,36 +4,33 @@ import { validarInput, isRequired, minLength, noSpaces, isSafeInput, maxLength }
 import { FaUserTie, FaLock } from "react-icons/fa";
 
 const loginAPI = async (usuario, password) => {
-    const URL = 'http://localhost:5000/api/profesores'; 
+    const URL = 'http://localhost:5000/api/login'; 
 
     try {
-        const response = await fetch(URL);
-        
-        if (!response.ok) {
-            throw new Error("Error al conectar con el servidor.");
-        }
-        
-        const listaProfesores = await response.json();
-        
-        const usuarioEncontrado = listaProfesores.find((prof) => {
-            const rutBD = String(prof.Rut).trim();   
-            const passBD = String(prof.Password).trim(); 
-            const rutInput = String(usuario).trim();
-            const passInput = String(password).trim();
-
-            return rutBD === rutInput && passBD === passInput;
+        const response = await fetch(URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                usuario,
+                password
+            })
         });
 
-        if (usuarioEncontrado) {
-            return usuarioEncontrado; 
-        } else {
-            throw new Error("Usuario o contraseña incorrectos");
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Error en el login");
         }
 
+        return data;
+
     } catch (error) {
-        throw error; 
+        throw error;
     }
 };
+
 
 const Login = ({ onLoginSuccess }) => {
     const [usuario, setUsuario] = useState('');
@@ -54,7 +51,7 @@ const Login = ({ onLoginSuccess }) => {
     };
 
     const validarPassword = () => {
-        const error = validarInput(password, [isRequired, isSafeInput]);
+        const error = validarInput(password, [isRequired]);
         setErrorPassword(error);
         return error;
     };
@@ -89,7 +86,7 @@ const Login = ({ onLoginSuccess }) => {
             }
 
 
-            onLoginSuccess(respuesta.Nombre); 
+            onLoginSuccess(respuesta.nombre); 
 
         } catch (errorObjeto) {
             const mensaje = errorObjeto.message || "Error desconocido";

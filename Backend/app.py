@@ -91,6 +91,7 @@ def get_equipos():
     except Exception as e:
         if conn: conn.close()
         return jsonify({"error": str(e)}), 500
+    
 @app.route('/api/profesores', methods=['GET'])
 def get_profesores():
     """Obtiene todos los profesores de la base de datos."""
@@ -107,6 +108,53 @@ def get_profesores():
     except Exception as e:
         if conn: conn.close()
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No se enviaron datos"}), 400
+
+    usuario_recibido = data.get('usuario')
+    password_recibido = data.get('password')
+
+    if not usuario_recibido or not password_recibido:
+        return jsonify({"error": "Faltan datos"}), 400
+
+    usuario_en_bd = buscar_usuario_por_rut(usuario_recibido)
+
+    if not usuario_en_bd:
+        return jsonify({"error": "Credenciales invalidas"}), 404
+
+    # Comparación directa (sin hash)
+    if usuario_en_bd["Password"] != password_recibido:
+        return jsonify({"error": "Contraseña incorrecta"}), 401
+    
+    return jsonify({
+        "mensaje": "Login exitoso",
+        "nombre": usuario_en_bd["Nombre"],
+        "rol": "profesor",
+        "email": usuario_en_bd["Email_institucional"]
+    }), 500
+
+def buscar_usuario_por_rut(rut):
+    conn = get_db_connection()
+    if conn is None:
+        return None
+
+    try:
+        with conn.cursor() as cursor:
+            sql = "SELECT * FROM Profesor WHERE Rut = %s AND Activo = 1"
+            cursor.execute(sql, (rut,))
+            usuario = cursor.fetchone()
+        conn.close()
+        return usuario
+    except Exception as e:
+        if conn: conn.close()
+        print("Error en buscar_usuario_por_rut:", e)
+        return None
+    
 
 
 @app.route('/api/equipos', methods=['POST'])
