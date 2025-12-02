@@ -4,6 +4,8 @@ import API from '../../api';
 import ExportPdfButton from './ExportPdfButton';
 import ProfessorDetailModal from './ProfessorDetailModal';
 import EquipmentList from '../Prestamos/EquipmentList';
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from "react-icons/fa";
 
 export const PROJECT_STRUCTURE_SCREENSHOT = '/mnt/data/6a6e0a2c-a24c-4988-9389-729f863d011b.png';
 
@@ -11,6 +13,8 @@ export default function ReportsPage(){
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProf, setSelectedProf] = useState(null);
+
+  const navigate = useNavigate();
 
   const refreshProfessors = useCallback(async () => {
     setLoading(true);
@@ -38,7 +42,30 @@ export default function ReportsPage(){
   ];
 
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ 
+        padding: '30px',
+        margin: '40px auto',         
+        maxWidth: '1100px',       
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', 
+        backdropFilter: 'blur(10px)', 
+        borderRadius: '15px',       
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)', 
+        color: '#333'               
+    }}>
+    <div style={{ marginBottom: '20px' }}>
+         <button 
+           onClick={() => navigate('/')}
+           style={{
+             display: 'flex', alignItems: 'center', gap: '8px',
+             background: '#333', color: 'white',
+             border: 'none', padding: '8px 16px', borderRadius: '20px',
+             cursor: 'pointer', fontSize: '14px'
+           }}
+         >
+           <FaArrowLeft /> Volver al Menú
+         </button>
+      </div>
+
       <h2>Reportes — Profesores con préstamos</h2>
       <p style={{ fontSize: 13, color: '#555' }}>
         Lista de profesores que han prestado al menos un equipo. (Estructura del proyecto: {PROJECT_STRUCTURE_SCREENSHOT})
