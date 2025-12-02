@@ -136,7 +136,7 @@ def login():
         "nombre": usuario_en_bd["Nombre"],
         "rol": "profesor",
         "email": usuario_en_bd["Email_institucional"]
-    }), 500
+    }), 200
 
 def buscar_usuario_por_rut(rut):
     conn = get_db_connection()

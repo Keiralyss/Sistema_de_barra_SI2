@@ -23,15 +23,23 @@ export const maxLength = (max) => (valor) => {
         : null;
 };
 
+//Validar RUT
+export const isValidRUT = (valor) => {
+    const rutRegex = /^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$/;
+    return rutRegex.test(valor)
+        ? null
+        : "RUT inválido";
+};
+
+
 //Primer muro 
-export const isSafeInput = (valor) => {
-
-    const forbiddenChars = /[<>;'"-]/; 
-
-    return forbiddenChars.test(valor) 
-        ? "Contiene caracteres no permitidos por seguridad" 
+export const noHTML = (valor) => {
+    const htmlRegex = /<[^>]*>/g;
+    return htmlRegex.test(valor)
+        ? "No se permiten etiquetas HTML"
         : null;
 };
+
 
 //Ejecutor
 export const validarInput = (valor, estrategias) => {
