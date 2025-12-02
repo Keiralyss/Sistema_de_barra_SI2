@@ -31,7 +31,6 @@ export const isValidRUT = (valor) => {
         : "RUT inválido";
 };
 
-
 //Primer muro 
 export const noHTML = (valor) => {
     const htmlRegex = /<\/?\s*[a-z][^>]*>/i;

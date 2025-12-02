@@ -51,7 +51,7 @@ const Login = ({ onLoginSuccess }) => {
     };
 
     const validarPassword = () => {
-        const error = validarInput(password, [isRequired, noHTML, minLength(5)]);
+        const error = validarInput(password, [isRequired, noHTML, minLength(5), maxLength(60)]);
         setErrorPassword(error);
         return error;
     };
