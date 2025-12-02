@@ -34,12 +34,11 @@ export const isValidRUT = (valor) => {
 
 //Primer muro 
 export const noHTML = (valor) => {
-    const htmlRegex = /<[^>]*>/g;
+    const htmlRegex = /<\/?\s*[a-z][^>]*>/i;
     return htmlRegex.test(valor)
         ? "No se permiten etiquetas HTML"
         : null;
 };
-
 
 //Ejecutor
 export const validarInput = (valor, estrategias) => {
