@@ -1,6 +1,7 @@
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from "react-icons/fa";
 
 function ScannerQR({ addScannedItem }) {
 
@@ -60,80 +61,157 @@ function ScannerQR({ addScannedItem }) {
     };
   }, [addScannedItem, navigate]);
 
-  return (
-    <div style={{ padding: "25px", textAlign: "center" }}>
-
+return (
+    <div>
       <style>{`
-        body {
-          margin: 0;
-          padding: 0;
-          background: #000000;
-        }
-
         :root {
-          font-family: 'Cambria', Cochin, Georgia, Times, 'Times New Roman', serif;
-          color-scheme: light dark;
+          font-family: 'Cambria', Cochin, Georgia, Times, Times New Roman, serif;
           --primary: steelblue;
-          --primary-light: lightsteelblue;
+          --text-muted: #666;
         }
 
-        h1 { margin-top: 20px; margin-bottom: 25px; }
-        .info-text { margin: 15px 0; font-size: 20px; font-weight: bold; }
-        .step-text { margin: 20px 0 25px; }
-        .scanned-box p { margin: 12px 0; font-size: 18px; }
-        .helper-text { margin-top: 25px; opacity: 0.8; }
-
-        @media (prefers-color-scheme: light) {
-          body { background: #f4f4f4; }
-          h1 { color: var(--primary); }
+        .scanner-container {
+          max-width: 500px;
+          margin: 40px auto;
+          padding: 30px;
+          text-align: center;
+          background-color: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(5px);
+          border-radius: 15px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        @media (prefers-color-scheme: dark) {
-          body { background: #1f1f1f; }
-          h1 { color: var(--primary-light); }
+        h1 { 
+          font-size: 28px; 
+          margin-bottom: 20px; 
+          color: var(--primary); 
+          font-weight: bold;
+        }
+
+        .volver-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: #333;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 14px;
+          margin: 0 auto 20px auto;
+          transition: transform 0.2s;
+        }
+        
+        .volver-btn:hover {
+            background: #555;
+            transform: scale(1.05);
+        }
+
+        .info-text { 
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 15px;
+          line-height: 1.4;
+          color: #333;
+        }
+
+        .step-text {
+          margin: 10px 0 20px;
+          font-size: 16px;
+          color: var(--text-muted);
+        }
+
+        /* Caja gris para los datos escaneados */
+        .scanned-box {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .scanned-box p {
+          margin: 8px 0;
+          font-size: 16px;
+          color: #333;
+          border-bottom: 1px dashed #ccc;
+          padding-bottom: 5px;
+        }
+
+        .scanned-box p:last-child {
+            border-bottom: none;
+        }
+
+        .label { 
+            font-weight: bold; 
+            color: var(--primary); 
+            display: inline-block;
+            width: 80px;
+        }
+
+        .helper-text { 
+            font-size: 13px; 
+            margin-top: 15px; 
+            color: #777; 
+        }
+
+        /* Ajuste para el cuadro de la cámara */
+        #reader {
+            border-radius: 10px;
+            overflow: hidden;
+            border: none !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        #reader__dashboard_section_csr button {
+            background: steelblue !important;
+            color: white !important;
+            border: none !important;
+            padding: 5px 10px;
+            border-radius: 5px;
         }
       `}</style>
 
-      <button
-        style={{
-          backgroundColor: 'gray',
-          color: 'white',
-          padding: '10px 20px',
-          borderRadius: '9999px',
-          border: 'none',
-          cursor: 'pointer',
-          marginBottom: '25px'
-        }}
-        onClick={() => navigate('/')}
-      >
-        ← volver
-      </button>
+      {/* CONTENEDOR TIPO TARJETA --- lo volvi a colocar pq se ve mal sin esto */}
+      <div className="scanner-container">
+        
+        <button className="volver-btn" onClick={() => navigate('/')}>
+            <FaArrowLeft /> Volver al Menú
+        </button>
 
-      <h1>Scaneo de QR</h1>
+        <h1>Escaneo de QR</h1>
 
-      <p className="info-text">
-        Escanea primero a la persona y luego el equipo.
-      </p>
+        <p className="info-text">
+          Escanea primero a la persona<br/>y luego el equipo.
+        </p>
 
-      <p className="step-text">
-        Paso actual: <strong>{scanStep === 'persona' ? 'Persona' : 'Equipo'}</strong>
-      </p>
+        <p className="step-text">
+          Paso actual: <strong>{scanStep === 'persona' ? '👤 Persona' : '💻 Equipo'}</strong>
+        </p>
 
-      <div className="scanned-box">
-        <p><strong>Persona:</strong> {personaCode || 'Pendiente'}</p>
-        <p><strong>Equipo:</strong> {equipoCode || 'Pendiente'}</p>
+        <div className="scanned-box">
+          <p><span className="label">Persona:</span> {personaCode || 'Pendiente'}</p>
+          <p><span className="label">Equipo:</span> {equipoCode || 'Pendiente'}</p>
+        </div>
+
+        {
+          scanResult ? (
+            <div style={{ padding: '20px', background: '#d4edda', borderRadius: '10px', color: '#155724' }}>
+              <h2>¡Escaneo Exitoso!</h2>
+              <p>Código: <strong>{scanResult}</strong></p>
+            </div>
+          ) : (
+            /* Aquí se renderiza la cámara */
+            <div id="reader" style={{ width: '100%', margin: 'auto' }}></div>
+          )
+        }
+
+        <p className="helper-text">(Apunta la cámara al código QR)</p>
       </div>
 
-      {scanResult ? (
-        <>
-          <h2 style={{ marginTop: "30px" }}>¡Escaneo Exitoso!</h2>
-          <p><strong>{scanResult}</strong></p>
-        </>
-      ) : (
-        <div id="reader" style={{ width: '350px', margin: '30px auto' }}></div>
-      )}
-
-      <p className="helper-text">(Apunta la cámara al QR)</p>
     </div>
   );
 }

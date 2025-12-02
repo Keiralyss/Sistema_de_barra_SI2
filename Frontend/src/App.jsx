@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import ScannerPage from './components/ScannerBar/ScannerPage.jsx';
 import ScannerQR from './components/ScannerQR/ScannerQR.jsx';
 import ReportsPage from './components/Reportes/ReportsPage.jsx';
@@ -116,6 +116,15 @@ function HomePage({ scannedData, removeScannedItem, updateScannedItem, usuario, 
 function App() {
 
     const [scannedData, setScannedData] = useState([]);
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.pathname === '/login') {
+            document.body.classList.add('login-mode');
+        } else {
+            document.body.classList.remove('login-mode');
+        }
+    }, [location])
 
     const [usuario, setUsuario] = useState(() => {
         return localStorage.getItem('usuarioGuardado') || null;
