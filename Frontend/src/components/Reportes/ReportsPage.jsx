@@ -13,10 +13,10 @@ export default function ReportsPage(){
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProf, setSelectedProf] = useState(null);
-  const storedUserRut = localStorage.getItem('userRut') || null;
-  const currentUserRut = storedUserRut || null;
-  const storedUserId = localStorage.getItem('userId'); // debe ser string
-  const currentUserId = storedUserId ? Number(storedUserId) : null;
+const storedUserId = localStorage.getItem('userId'); // string o null
+const currentUserId = storedUserId ? Number(storedUserId) : null;
+const storedUserRut = localStorage.getItem('userRut') || null;
+const currentUserRut = storedUserRut || null;
 
 
   const navigate = useNavigate();
